@@ -175,6 +175,7 @@ public class JdbcSourceConnectorConfig extends AbstractConfig {
   public static final String MODE_TIMESTAMP = "timestamp";
   public static final String MODE_INCREMENTING = "incrementing";
   public static final String MODE_TIMESTAMP_INCREMENTING = "timestamp+incrementing";
+  public static final String MODE_CHANGE_TRACKING = "changetracking";
 
   public static final String INCREMENTING_COLUMN_NAME_CONFIG = "incrementing.column.name";
   private static final String INCREMENTING_COLUMN_NAME_DOC =
@@ -560,7 +561,8 @@ public class JdbcSourceConnectorConfig extends AbstractConfig {
             MODE_BULK,
             MODE_TIMESTAMP,
             MODE_INCREMENTING,
-            MODE_TIMESTAMP_INCREMENTING
+            MODE_TIMESTAMP_INCREMENTING,
+            MODE_CHANGE_TRACKING
         ),
         Importance.HIGH,
         MODE_DOC,
@@ -882,6 +884,8 @@ public class JdbcSourceConnectorConfig extends AbstractConfig {
           return name.equals(TIMESTAMP_COLUMN_NAME_CONFIG)
                  || name.equals(INCREMENTING_COLUMN_NAME_CONFIG)
                  || name.equals(VALIDATE_NON_NULL_CONFIG);
+        case MODE_CHANGE_TRACKING:
+          return false;
         case MODE_UNSPECIFIED:
           throw new ConfigException("Query mode must be specified");
         default:

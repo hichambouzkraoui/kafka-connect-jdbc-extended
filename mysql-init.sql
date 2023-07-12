@@ -1,0 +1,3 @@
+CREATE DATABASE test;
+USE test;
+CREATE TABLE accounts (id INTEGER,name VARCHAR(20), amount INTEGER);

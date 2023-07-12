@@ -110,6 +110,12 @@
             <version>${postgresql.version}</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
+        </dependency>
         <!-- Add all packages imported by ojdbc8-production explicitly to pom when bumping up driver version -->
 	<!-- Do not use ojdbc8-production directly to avoid .pom file in final package -->
         <!-- See https://www.oracle.com/database/technologies/maven-central-guide.html -->
