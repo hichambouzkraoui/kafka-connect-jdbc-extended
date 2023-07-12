@@ -29,6 +29,35 @@ Contributions can only be accepted if they contain appropriate testing. For exam
 
 For more information, check the documentation for the JDBC connector on the [confluent.io](https://docs.confluent.io/current/connect/kafka-connect-jdbc/index.html) website. Questions related to the connector can be asked on [Community Slack](https://launchpass.com/confluentcommunity) or the [Confluent Platform Google Group](https://groups.google.com/forum/#!topic/confluent-platform/).
 
+# Change tracking mode
+here is an example how to use change tracking mode
+```
+{
+  "name": "jdbc_source_mssql_01",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "connection.url": "jdbc:sqlserver://mssql:1431;databaseName=test",
+    "connection.user": "connect_user",
+    "connection.password": "connect_password",
+    "topic.prefix": "mssql-01-",
+    "poll.interval.ms" : 5000,
+    "table.whitelist" : "dbo.accounts",
+    "mode":"changetracking"
+  }
+}
+```
+As prerequisites, change tracking feature should be enabled on MSSQL:
+```
+USE [test];
+ALTER DATABASE [test] SET CHANGE_TRACKING = ON;
+ALTER TABLE [dbo].[accounts] ENABLE CHANGE_TRACKING;
+GRANT VIEW CHANGE TRACKING ON [dbo].[accounts] TO connect_user;
+
+```
+
+
+
+
 # License
 
 This project is licensed under the [Confluent Community License](LICENSE).
