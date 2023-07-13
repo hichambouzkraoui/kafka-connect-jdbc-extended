@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * BulkTableQuerier always returns the entire table.
+ * ChangeTrackingTableQuerier always returns the latest changed rows after a specific change_version.
  */
 public class ChangeTrackingTableQuerier extends TableQuerier {
   private static final Logger log = LoggerFactory.getLogger(ChangeTrackingTableQuerier.class);
@@ -50,9 +50,9 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
   protected ChangeTrackingOffset offset;
   private final String changeTrackingSQL =
           "SELECT CT.%s,%s,CT.SYS_CHANGE_OPERATION AS operation_ind,"
-          + "CT.SYS_CHANGE_VERSION as sys_change_version FROM %s.%s AS T "
+          + "CT.SYS_CHANGE_VERSION as %s FROM %s.%s "
           + "RIGHT OUTER JOIN CHANGETABLE(CHANGES %s.%s, %s) AS CT "
-          + "ON T.%s = CT.%s ORDER BY CT.SYS_CHANGE_VERSION";
+          + "ON %s.%s = CT.%s ORDER BY CT.SYS_CHANGE_VERSION";
 
   public ChangeTrackingTableQuerier(
       DatabaseDialect dialect,
@@ -77,16 +77,18 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
     ExpressionBuilder builder = dialect.expressionBuilder();
     builder.append(changeTrackingSQL);
     String columnsString = columns.stream()
-                                  .map(columnId -> "T." + columnId.name())
+                                  .map(columnId -> tableId.tableName() + "." + columnId.name())
                                   .collect(Collectors.joining(","));
     String queryString = String.format(builder.toString(),
             primaryKeyColumn.name(),
             columnsString,
+            ChangeTrackingOffset.CHANGE_TRACKING_OFFSET_FIELD,
             tableId.schemaName(),
             tableId.tableName(),
             tableId.schemaName(),
             tableId.tableName(),
             offset.getChangeVersionOffset(),
+            tableId.tableName(),
             primaryKeyColumn.name(),
             primaryKeyColumn.name());
     recordQuery(queryString);
@@ -101,7 +103,6 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
 
   @Override
   public SourceRecord extractRecord() throws SQLException {
-    log.info("extractRecord:" + resultSet.getLong("person_id"));
     Struct record = new Struct(schemaMapping.schema());
     for (FieldSetter setter : schemaMapping.fieldSetters()) {
       try {
@@ -114,9 +115,7 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
         throw new DataException(e);
       }
     }
-    //offset = criteria.extractValues(schemaMapping.schema(), record, offset, timestampGranularity);
     offset = extractOffset();
-    log.info("id:" + resultSet.getLong("person_id"));
     return new SourceRecord(partition, offset.toMap(), topic, record.schema(), record);
   }
 
@@ -144,7 +143,7 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
       resultSet = executeQuery();
       String schemaName = tableId != null ? tableId.tableName() : null; // backwards compatible
       ResultSetMetaData metadata = resultSet.getMetaData();
-      //dialect.validateSpecificColumnTypes(metadata, timestampColumns);
+      dialect.validateSpecificColumnTypes(metadata, columns);
       schemaMapping = SchemaMapping.create(schemaName, metadata, dialect);
     } else {
       log.trace("Current ResultSet {} isn't null. Continuing to seek.", resultSet.hashCode());
@@ -155,7 +154,6 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
     // This action is a no-op for the first poll()
     this.committedOffset = this.offset;
     log.trace("Set the committed offset: {}", committedOffset.getChangeVersionOffset());
-    log.info("Set the committed offset: {}", committedOffset.getChangeVersionOffset());
   }
 
   private void findPrimaryKeyColumn(Connection db) throws SQLException {
@@ -187,6 +185,6 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
   }
 
   private ChangeTrackingOffset extractOffset() throws SQLException {
-    return new ChangeTrackingOffset(resultSet.getLong("sys_change_version"));
+    return new ChangeTrackingOffset(resultSet.getLong(ChangeTrackingOffset.CHANGE_TRACKING_OFFSET_FIELD));
   }
 }

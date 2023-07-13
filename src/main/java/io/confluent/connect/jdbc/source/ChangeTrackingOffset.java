@@ -24,7 +24,7 @@ import java.util.Objects;
 
 public class ChangeTrackingOffset {
   private static final Logger log = LoggerFactory.getLogger(JdbcSourceTask.class);
-  static final String CHANGE_TRACKING_OFFSET_FIELD = "change_version";
+  static final String CHANGE_TRACKING_OFFSET_FIELD = "sys_change_version";
 
   private final Long changeVersionOffset;
 
