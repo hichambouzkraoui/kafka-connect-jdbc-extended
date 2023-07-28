@@ -74,21 +74,24 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
     findAllNonPKColumns(db);
     findPrimaryKeyColumn(db);
 
+    String schemaName = tableId.schemaName();
+    String tableName = tableId.tableName();
+
     ExpressionBuilder builder = dialect.expressionBuilder();
     builder.append(changeTrackingSQL);
     String columnsString = columns.stream()
-                                  .map(columnId -> tableId.tableName() + "." + columnId.name())
+                                  .map(columnId -> tableName + "." + columnId.name())
                                   .collect(Collectors.joining(","));
     String queryString = String.format(builder.toString(),
             primaryKeyColumn.name(),
             columnsString,
             ChangeTrackingOffset.CHANGE_TRACKING_OFFSET_FIELD,
-            tableId.schemaName(),
-            tableId.tableName(),
-            tableId.schemaName(),
-            tableId.tableName(),
+            schemaName,
+            tableName,
+            schemaName,
+            tableName,
             offset.getChangeVersionOffset(),
-            tableId.tableName(),
+            tableName,
             primaryKeyColumn.name(),
             primaryKeyColumn.name());
     recordQuery(queryString);
