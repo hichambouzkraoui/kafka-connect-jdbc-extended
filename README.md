@@ -41,7 +41,8 @@ here is an example how to use change tracking mode
     "connection.password": "connect_password",
     "topic.prefix": "mssql-01-",
     "poll.interval.ms" : 5000,
-    "table.whitelist" : "dbo.accounts",
+    "schema.pattern" : "dbo",
+    "table.whitelist" : "accounts",
     "mode":"changetracking"
   }
 }
