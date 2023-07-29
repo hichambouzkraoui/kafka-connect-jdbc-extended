@@ -15,9 +15,15 @@
 
 package io.confluent.connect.jdbc.source;
 
+import io.confluent.connect.jdbc.dialect.DatabaseDialect;
+import io.confluent.connect.jdbc.util.TableId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +31,7 @@ import java.util.Objects;
 public class ChangeTrackingOffset {
   private static final Logger log = LoggerFactory.getLogger(JdbcSourceTask.class);
   static final String CHANGE_TRACKING_OFFSET_FIELD = "sys_change_version";
+  static final String MIN_CHANGE_TRACKING_OFFSET_FIELD = "min_valid_version";
 
   private final Long changeVersionOffset;
 
@@ -38,6 +45,26 @@ public class ChangeTrackingOffset {
 
   public long getChangeVersionOffset() {
     return changeVersionOffset == null ? 0 : changeVersionOffset;
+  }
+
+  public long getChangeVersionOffset(DatabaseDialect dialect, Connection db, TableId tableId) throws SQLException {
+    return changeVersionOffset == null ? getMinChangeVersionOffset(dialect, db, tableId) : changeVersionOffset;
+  }
+
+  private long getMinChangeVersionOffset(DatabaseDialect dialect, Connection db, TableId tableId) throws SQLException {
+    String minChangeTrackingSQL = String.format(
+                                  "SELECT CHANGE_TRACKING_MIN_VALID_VERSION(OBJECT_ID('%s.%s')) as %s",
+                                  tableId.schemaName(),
+                                  tableId.tableName(),
+                                  MIN_CHANGE_TRACKING_OFFSET_FIELD
+                                  );
+
+    PreparedStatement stm = dialect.createPreparedStatement(db, minChangeTrackingSQL);
+    ResultSet resultSet = stm.executeQuery();
+    while(resultSet.next()) {
+      return resultSet.getLong(MIN_CHANGE_TRACKING_OFFSET_FIELD);
+    }
+    return 0;
   }
 
   public Map<String, Object> toMap() {

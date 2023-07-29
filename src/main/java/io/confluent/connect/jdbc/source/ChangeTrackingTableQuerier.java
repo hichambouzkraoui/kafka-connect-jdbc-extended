@@ -90,7 +90,7 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
             tableName,
             schemaName,
             tableName,
-            offset.getChangeVersionOffset(),
+            offset.getChangeVersionOffset(dialect,db,tableId),
             tableName,
             primaryKeyColumn.name(),
             primaryKeyColumn.name());
