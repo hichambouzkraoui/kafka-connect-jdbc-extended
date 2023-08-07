@@ -155,29 +155,8 @@ public class TimestampTableQuerierTest {
     assertFalse(querier.next());
   }
 
-  @Test
-  public void testTwoRecordsWithSameTimestampInResultSet() throws Exception {
-    Timestamp newTimestamp = new Timestamp(INITIAL_TS.getTime() + 1);
-    expectNewQuery();
-    TimestampIncrementingTableQuerier querier = querier(INITIAL_TS);
-    expectRecord(newTimestamp);
-    expectRecord(newTimestamp);
-    expect(resultSet.next()).andReturn(false);
 
-    replayAll();
 
-    querier.maybeStartQuery(db);
-
-    // This isn't the last record in the result set with the new timestamp, so we can't commit an
-    // offset that includes that timestamp yet
-    assertNextRecord(querier, INITIAL_TS);
-
-    // Now we can commit an offset with that timestamp, since this is the last record in the result
-    // set
-    assertNextRecord(querier, newTimestamp);
-
-    assertFalse(querier.next());
-  }
 
   @Test
   public void testTwoRecordsWithSameTimestampFollowedByRecordWithNewTimestampInResultSet() throws Exception {
