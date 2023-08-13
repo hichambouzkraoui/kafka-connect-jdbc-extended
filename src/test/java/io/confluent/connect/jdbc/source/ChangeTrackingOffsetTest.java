@@ -90,4 +90,11 @@ public class ChangeTrackingOffsetTest {
     assertEquals(set, ChangeTrackingOffset.fromMap(set.toMap()));
   }
 
+  @Test
+  public void testEquals() {
+    assertEquals(unset, new ChangeTrackingOffset(null));
+    assertEquals(set,new ChangeTrackingOffset(expectedOffset));
+
+  }
+
 }
