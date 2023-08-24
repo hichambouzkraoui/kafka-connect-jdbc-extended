@@ -677,6 +677,7 @@ public class GenericDatabaseDialect implements DatabaseDialect {
         columnPattern
     )) {
       final int rsColumnCount = rs.getMetaData().getColumnCount();
+
       while (rs.next()) {
         final String catalogName = rs.getString(1);
         final String schemaName = rs.getString(2);

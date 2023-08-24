@@ -52,7 +52,7 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
           "SELECT CT.%s,%s,CT.SYS_CHANGE_OPERATION AS operation_ind,"
           + "CT.SYS_CHANGE_VERSION as %s FROM %s.%s "
           + "RIGHT OUTER JOIN CHANGETABLE(CHANGES %s.%s, %s) AS CT "
-          + "ON %s.%s = CT.%s ORDER BY CT.SYS_CHANGE_VERSION";
+          + "ON %s.%s.%s = CT.%s ORDER BY CT.SYS_CHANGE_VERSION";
 
   public ChangeTrackingTableQuerier(
       DatabaseDialect dialect,
@@ -80,7 +80,7 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
     ExpressionBuilder builder = dialect.expressionBuilder();
     builder.append(changeTrackingSQL);
     String columnsString = columns.stream()
-                                  .map(columnId -> tableName + "." + columnId.name())
+                                  .map(columnId -> schemaName + '.' + tableName + "." + columnId.name())
                                   .collect(Collectors.joining(","));
     String queryString = String.format(builder.toString(),
             primaryKeyColumn.name(),
@@ -91,6 +91,7 @@ public class ChangeTrackingTableQuerier extends TableQuerier {
             schemaName,
             tableName,
             offset.getChangeVersionOffset(dialect,db,tableId),
+            schemaName,
             tableName,
             primaryKeyColumn.name(),
             primaryKeyColumn.name());

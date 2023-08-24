@@ -193,7 +193,7 @@ public class JdbcSourceTask extends SourceTask {
       final Map<String, String> partition;
       switch (queryMode) {
         case TABLE:
-          if (validateNonNulls) {
+          if (validateNonNulls & !mode.equals(JdbcSourceTaskConfig.MODE_CHANGE_TRACKING)) {
             validateNonNullable(
                 mode,
                 tableOrQuery,
